@@ -1,91 +1,146 @@
 <template>
-    <div class="fonts" :style="{ fontFamily: 'Poppins, sans-serif' }">
+    <div :class="{ 'fonts': fontFamily }">
         <Navbar />
-        <RouterView />
+
+        <ul class="menu">
+            <li><button @click="toggle">Add Car</button></li>
+        </ul>
+
+        <div class="cars-data">
+            <GalleryCard :data="data" @emitPrice="emitPrice" @editData="editData" @deleteData="deleteData" />
+
+            <CarForm v-if="editModel" :editModel="editModel" :isAddModel="isAddModel" :editCar="editCar"
+                @getFormData="getFormData" @onCancel="onCancel" @alertUpdateData="alertUpdateData" />
+        </div>
     </div>
 </template>
 
-
 <script>
-// import axios from "axios";
+import CarForm from "./components/CarForm.vue";
+import GalleryCard from "./components/GalleryCard.vue";
+import axios from "axios";
+
 export default {
     name: "App",
 
-    // created() {
-    //     this.carsData
-    // },
+    components: {
+        GalleryCard,
+        CarForm,
+    },
 
     data() {
         return {
             data: "",
             editModel: false,
             isAddModel: true,
+            fontFamily: true,
         };
     },
 
-    //----------------Axios APIs - GET, Post, Put, Delete----------------//
+    created() {
+        this.carsData()
+    },
 
-    // // GET Method - Axios API
-    // carsData() {
-    //     axios.get(
-    //         "https://testapi.io/api/dartya/resource/cardata"
-    //     ).then(response => {
-    //         this.data = response.data.data
-    //     })
-    // },
+    methods: {
+        emitPrice(carName, carPrice) {
+            alert(`${carName}, ₹${carPrice}`);
+        },
 
-    // Post Method - Axios API
-    // getFormData(carData) {
-    //     axios.post(
-    //         "https://testapi.io/api/dartya/resource/cardata", carData
-    //     ).then(response => console.log(response));
-    //     alert(`"Created Data"\n
-    //                  "Car Name is-" ${carData.name}, 
-    //                  "Car Description is- " ${carData.details}, 
-    //                  "Car Price is- " ${carData.price}, 
-    //                  "Car URL is- " ${carData.image}`);
-    //     this.carsData()
-    //     this.onCancel()
-    // },
+        editData(data) {
+            this.editCar = data;
+            this.editModel = true;
+            this.isAddModel = false;
+        },
 
+        toggle() {
+            this.editModel = true;
+            this.isAddModel = true;
+            this.editCar = {}
+        },
 
-    // Put Method - Axios API
-    // async alertUpdateData(carData) {
-    //     await axios.put(
-    //         `https://testapi.io/api/dartya/resource/cardata/${carData.id}`,
-    //         {
-    //             name: carData.name,
-    //             price: carData.price,
-    //             image: carData.image,
-    //             details: carData.details,
-    //         }
-    //     ).then((response) => console.log(response));
+        onCancel() {
+            this.isAddModel = false;
+            this.editModel = false;
+        },
 
-    //     // Edit Data Alert
-    //     alert(`"Edited Data"\n
-    //                 "Car Name is-" ${carData.name}, 
-    //                 "Car Description is- " ${carData.details}, 
-    //                 "Car Price is- " ${carData.price}, 
-    //                 "Car URL is- " ${carData.image}`);
-    //     this.carsData()
-    //     this.onCancel()
-    // },
+        deleteData(itemId, itemName) {
+            this.deleteData(itemId, itemName);
+        },
 
-    // DELETE Method - Axios API
-    // async deleteData(itemId, itemName) {
-    //     // Delete Data Alert
-    //     const deleteAlert = window.confirm(
-    //         `Are You Sure Want to Delete ${itemName}`
-    //     );
+        //----------------Axios APIs - GET, Post, Put, Delete----------------//
 
-    //     if (deleteAlert == true) {
-    //         await axios
-    //             .delete(`https://testapi.io/api/dartya/resource/cardata/${itemId}`)
-    //             .then((response) => console.log(response));
-    //         this.carsData();
-    //     }
-    // },
+        // GET Method - Axios API
+        carsData() {
+            axios.get(
+                "https://testapi.io/api/dartya/resource/cardata"
+            ).catch((error) => alert("Coudn't call the GET API... Please try Again"))
+                .then(response => {
+                    this.data = response.data.data
+                })
+        },
 
+        // Post Method - Axios API
+        getFormData(carData) {
+            axios.post(
+                "https://testapi.io/api/dartya/resource/cardata", carData
+            ).then(response => this.carsData())
+
+                .catch(error => {
+                    alert("Coudn't Call The Post API... Please try Again")
+                })
+
+            alert(`"Created Data"\n
+                     "Car Name is-" ${carData.name}, 
+                     "Car Description is- " ${carData.details}, 
+                     "Car Price is- " ${carData.price}, 
+                     "Car URL is- " ${carData.image}`);
+            this.onCancel()
+        },
+
+        // Put Method - Axios API
+        async alertUpdateData(carData) {
+            await axios.put(
+                `https://testapi.io/api/dartya/resource/cardata/${carData.id}`,
+                {
+                    name: carData.name,
+                    price: carData.price,
+                    image: carData.image,
+                    details: carData.details,
+                }
+            ).then(response => this.carsData())
+
+                .catch(error => {
+                    alert("Coudn't Call The Put API... Please try Again")
+                })
+
+            // Edit Data Alert
+            alert(`"Edited Data"\n
+                    "Car Name is-" ${carData.name}, 
+                    "Car Description is- " ${carData.details}, 
+                    "Car Price is- " ${carData.price}, 
+                    "Car URL is- " ${carData.image}`);
+            this.carsData()
+            this.onCancel()
+        },
+
+        // DELETE Method - Axios API
+        async deleteData(itemId, itemName) {
+
+            // Delete Data Alert
+            const deleteAlert = window.confirm(
+                `Are You Sure Want to Delete ${itemName}`
+            );
+
+            if (deleteAlert == true) {
+                await axios
+                    .delete(`https://testapi.io/api/dartya/resource/cardata/${itemId}`)
+                    .then((response) => this.carsData())
+                    .catch(error => {
+                        alert("Coudn't Call The Delete API... Please try Again")
+                    })
+            }
+        },
+    },
 };
 </script>
 
@@ -101,11 +156,12 @@ export default {
     padding: 10px 20px;
     border-radius: 10px;
     cursor: pointer;
-}
-
-.menu button {
     background-color: transparent;
     color: white;
     font-size: 20px;
+}
+
+.fonts {
+    font-family: 'Poppins', sans-serif;
 }
 </style>
